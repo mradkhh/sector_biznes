@@ -12,6 +12,7 @@ import {
     TableSortLabel
 } from "@mui/material";
 import {DropIcon} from "../assets/icons.tsx";
+import Spinner from "../components/Spinner.tsx";
 
 
 interface IPost {
@@ -41,7 +42,7 @@ const Home:FC = () => {
     const [ headId, setHeadId ] = useState<number>(0)
     const pageSize: number = 10;
 
-    const { data } = useFetchGetPostsQuery({})
+    const { data, isFetching } = useFetchGetPostsQuery({})
 
     const headCells: ITableHead[] = [
         {
@@ -179,7 +180,8 @@ const Home:FC = () => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {posts?.map((row: IPost) => (
+                        {
+                            (posts && !isFetching) && posts?.map((row: IPost) => (
                             <TableRow
                                 key={row?.id}
                                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
@@ -194,9 +196,15 @@ const Home:FC = () => {
                                     width: '44%',
                                 }} align="left">{generateHighlightedText(row.body, searchText)}</TableCell>
                             </TableRow>
-                        ))}
+                        ))
+                        }
                     </TableBody>
                 </Table>
+                {
+                    isFetching && <div className={"loading"}>
+                                        <Spinner/>
+                                    </div>
+                }
             </TableContainer>
             <div className={"table__pagination"}>
                 <div
