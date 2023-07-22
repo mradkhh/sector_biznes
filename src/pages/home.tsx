@@ -39,7 +39,6 @@ const Home:FC = () => {
     const [posts, setPosts] = useState<IPost[]>([] as IPost[]);
     const [rows, setRows] = useState<IPost[]>([] as IPost[]);
     const [currentPage, setCurrentPage] = useState<number>(1);
-    const [pageCount, setPageCount] = useState<number | undefined>(1);
     const [directionBoolean, setDirectionBoolean] = useState<boolean>(true);
     const [ headId, setHeadId ] = useState<number>(0)
     const pageSize: number = 10;
@@ -135,10 +134,6 @@ const Home:FC = () => {
     useEffect(() => {
         window.scrollTo(0, 0)
     }, [posts])
-
-    useEffect(() => {
-        setPageCount(data?.length)
-    }, [data?.length])
 
     return (
         <>
