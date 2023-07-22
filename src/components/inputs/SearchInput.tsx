@@ -1,4 +1,4 @@
-import React, {FC, useState} from "react";
+import React, {FC} from "react";
 import {SearchIcon} from "../../assets/icons.tsx";
 
 
@@ -9,13 +9,8 @@ interface IProps {
 
 const SearchComponent: FC<IProps> = ({ onChange, value }) => {
 
-  // const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   setSearchText(event.target.value);
-  // };
-
   const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // onSearch(searchText);
   };
 
   return (

@@ -1,4 +1,4 @@
-import {FC, memo, useEffect, useState} from 'react';
+import {ChangeEvent, FC, memo, useEffect, useState} from 'react';
 import SearchInput from "../components/inputs/SearchInput.tsx";
 import {useFetchGetPostsQuery} from "../services/fetchServices.ts";
 import {
@@ -36,8 +36,6 @@ const Home:FC = () => {
     // TODO: 3. Jadval sahifasi brauzerning URL manzilida ko'rsatilishi kerak.
 
     const [searchText, setSearchText] = useState<string>('');
-    const [totalMatches, setTotalMatches] = useState<number>(0);
-
     const [posts, setPosts] = useState<IPost[]>([] as IPost[]);
     const [rows, setRows] = useState<IPost[]>([] as IPost[]);
     const [currentPage, setCurrentPage] = useState<number>(1);
@@ -69,12 +67,12 @@ const Home:FC = () => {
     ]
 
 
-    const handleSearchChange = (event: any) => {
-        setSearchText(event.target.value);
+    const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
+        setSearchText(event?.target?.value);
     };
 
     const handleSorting = (direction: boolean, property: string, id: number) => {
-        const sortedPosts = [...rows]?.sort((a:IPost, b:IPost) => {
+        const sortedPosts = [...rows]?.sort((a:any, b:any) => {
             if (property === 'id') {
                 if (direction) {
                     return a[property] - b[property];
