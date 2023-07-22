@@ -24,17 +24,7 @@ export const fetchApi = createApi({
                     }
                 }),
                 providesTags: () => ['Fetch'],
-            }),
-            fetchEditMe: builder.mutation<any, { }>({
-                query: (body) => ({
-                    url: '',
-                    method: 'POST',
-                    body: {
-                        ...body
-                    },
-                }),
-                invalidatesTags: ['Fetch']
-            }),
+            })
         }
     }
 })

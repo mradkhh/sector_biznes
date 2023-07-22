@@ -39,6 +39,7 @@ const Home:FC = () => {
     const [posts, setPosts] = useState<IPost[]>([] as IPost[]);
     const [rows, setRows] = useState<IPost[]>([] as IPost[]);
     const [currentPage, setCurrentPage] = useState<number>(1);
+    const [pageCount, setPageCount] = useState<number | undefined>(1);
     const [directionBoolean, setDirectionBoolean] = useState<boolean>(true);
     const [ headId, setHeadId ] = useState<number>(0)
     const pageSize: number = 10;
@@ -96,7 +97,7 @@ const Home:FC = () => {
 
 
     const handlePageChange = (page: number) => {
-        if ((page > 0) && (page <= (data?.length / pageSize))) {
+        if ((page > 0) && (page <= (pageCount / pageSize))) {
             setCurrentPage(page)
         }
     };
@@ -134,6 +135,10 @@ const Home:FC = () => {
     useEffect(() => {
         window.scrollTo(0, 0)
     }, [posts])
+
+    useEffect(() => {
+        setPageCount(data?.length)
+    }, [data])
 
   return (
         <>
@@ -184,7 +189,7 @@ const Home:FC = () => {
                     className={"table__pagination_prev"}
                 >Назад</div>
                 <div className={"table__pagination_pages"}>
-                    {Array.from({ length: Math.ceil(data?.length / pageSize) }, (_, i: number) => (
+                    {Array.from({ length: Math.ceil(pageCount / pageSize) }, (_, i: number) => (
                         <div className={ 'table__pagination_page ' + ((currentPage === i + 1) ? "table__pagination_active" : "")} key={i} onClick={() => handlePageChange(i + 1)}>
                             {i + 1}
                         </div>
