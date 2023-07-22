@@ -1,14 +1,17 @@
-import React, { useState } from "react";
+import React, {FC, useState} from "react";
 import {SearchIcon} from "../../assets/icons.tsx";
 
 
+interface IProps {
+  onChange: any;
+  value: string
+}
 
-const SearchComponent: React.FC = () => {
-  const [searchText, setSearchText] = useState("");
+const SearchComponent: FC<IProps> = ({ onChange, value }) => {
 
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchText(event.target.value);
-  };
+  // const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   setSearchText(event.target.value);
+  // };
 
   const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -22,8 +25,8 @@ const SearchComponent: React.FC = () => {
           <input
               className={"search__input"}
               type="text"
-              value={searchText}
-              onChange={handleSearchChange}
+              value={value}
+              onChange={onChange}
               placeholder="Поиск"
               style={{ width: "100%" }}
           />

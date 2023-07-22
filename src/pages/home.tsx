@@ -1,4 +1,4 @@
-import {FC, memo, useState} from 'react';
+import {FC, memo, useEffect, useState} from 'react';
 import SearchInput from "../components/inputs/SearchInput.tsx";
 import {useFetchGetPostsQuery} from "../services/fetchServices.ts";
 import {
@@ -8,7 +8,6 @@ import {
     TableCell,
     TableContainer,
     TableHead,
-    TablePagination,
     TableRow,
     TableSortLabel
 } from "@mui/material";
@@ -21,78 +20,161 @@ interface IPost {
     body: string
 }
 
+interface ITableHead {
+    id: number;
+    property: string;
+    title: string;
+    direction: boolean
+}
+
+
+
+
+
 const Home:FC = () => {
 
-    // TODO: Ustun sarlavhalarini bosish yozuvlarni saralaydi (kattadan kichikga yoki alifbo tartibida).
-    // TODO: Qidiruv satriga istalgan qiymatni kiritishingiz mumkin va jadvalda ushbu qiymat mavjud bo'lgan yozuv ko'rsatiladi. Barcha ustunlar bo'ylab qidirish.
-    // TODO: Jadval sahifasi brauzerning URL manzilida ko'rsatilishi kerak.
+    // TODO: 3. Jadval sahifasi brauzerning URL manzilida ko'rsatilishi kerak.
 
+    const [searchText, setSearchText] = useState<string>('');
+    const [totalMatches, setTotalMatches] = useState<number>(0);
 
+    const [posts, setPosts] = useState<IPost[]>([] as IPost[]);
+    const [rows, setRows] = useState<IPost[]>([] as IPost[]);
     const [currentPage, setCurrentPage] = useState<number>(1);
+    const [directionBoolean, setDirectionBoolean] = useState<boolean>(true);
+    const [ headId, setHeadId ] = useState<number>(0)
     const pageSize: number = 10;
 
     const { data } = useFetchGetPostsQuery({})
 
-    const createData = ( id: number, title: string, body: string ) => ({ id, title, body })
+    const headCells: ITableHead[] = [
+        {
+            id: 1,
+            property: 'id',
+            title: "ID",
+            direction: directionBoolean
+        },
+        {
+            id: 2,
+            property: 'title',
+            title: "Заголовок",
+            direction: directionBoolean
+        },
+        {
+            id: 3,
+            property: 'body',
+            title: "Описание",
+            direction: directionBoolean
+        },
+    ]
 
-    const rows = data?.map((item: IPost) => {
-        return createData(item?.id, item?.title, item?.body)
-    })
 
+    const handleSearchChange = (event: any) => {
+        setSearchText(event.target.value);
+    };
 
-    const getCurrentPageData = () => {
+    const handleSorting = (direction: boolean, property: string, id: number) => {
+        const sortedPosts = [...rows]?.sort((a:IPost, b:IPost) => {
+            if (property === 'id') {
+                if (direction) {
+                    return a[property] - b[property];
+                } else {
+                    return b[property] - a[property];
+                }
+            } else {
+                if (direction) {
+                    return a[property].localeCompare(b[property]);
+                } else {
+                    return b[property].localeCompare(a[property]);
+                }
+            }
+        });
         const startIdx = (currentPage - 1) * pageSize;
         const endIdx = startIdx + pageSize;
-        return rows?.slice(startIdx, endIdx);
+        setPosts(sortedPosts?.slice(startIdx, endIdx));
+        setDirectionBoolean(!directionBoolean)
+        setHeadId(direction ? id : 0)
     };
+
 
     const handlePageChange = (page: number) => {
-            if ((page > 0) && (page <= (data?.length / pageSize))) {
-                setCurrentPage(page);
-            }
+        if ((page > 0) && (page <= (data?.length / pageSize))) {
+            setCurrentPage(page)
+        }
     };
 
+    const generateHighlightedText = (text: string, highlight: string) => {
+        if (highlight?.length) {
+            const regex = new RegExp(`(${highlight})`, 'gi');
+            const parts = text.split(regex);
+            return parts.map((part, index) =>
+                    regex.test(part) ? (
+                        <span key={index} style={{ backgroundColor: 'yellow' }}>
+          {part}
+        </span>
+                    ) : (
+                        <span key={index}>{part}</span>
+                    )
+            );
+        } else {
+            return text
+        }
+    };
+
+    useEffect(() => {
+        handleSorting(true, 'id', 0)
+        setRows(data ? data : [])
+        setCurrentPage(1);
+    }, [data, rows])
+
+    useEffect(() => {
+        const startIdx = (currentPage - 1) * pageSize;
+        const endIdx = startIdx + pageSize;
+        setPosts( rows?.slice(startIdx, endIdx));
+    }, [currentPage]);
+
+    useEffect(() => {
+        window.scrollTo(0, 0)
+    }, [posts])
 
   return (
         <>
-            <SearchInput/>
+            <SearchInput value={searchText} onChange={handleSearchChange}/>
             <TableContainer component={Paper}>
                 <Table sx={{ minWidth: 650 }} aria-label="simple table">
                     <TableHead>
                         <TableRow>
-                            <TableCell align="center" >
-                                <TableSortLabel
-                                    direction="asc" // "asc", "desc", or false
-                                    IconComponent={DropIcon}
-                                >
-                                    ID
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell align="center" >
-                                <TableSortLabel
-                                    IconComponent={DropIcon}
-                                >
-                                    Заголовок
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell align="center" >
-                                <TableSortLabel
-                                    IconComponent={DropIcon}
-                                >
-                                    Описание
-                                </TableSortLabel>
-                            </TableCell>
+                            {
+                                headCells.map((item: ITableHead) =>
+                                    <TableCell align="center" >
+                                        <TableSortLabel
+                                            key={item.id}
+                                            className={headId !== item.id ? " active_sort" : " inactive_sort"}
+                                            IconComponent={DropIcon}
+                                            onClick={() => handleSorting(item.direction, item.property, item.id)}
+                                        >
+                                            { item.title }
+                                        </TableSortLabel>
+                                    </TableCell>
+                                )
+                            }
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {getCurrentPageData()?.map((row: IPost) => (
+                        {posts?.map((row: IPost) => (
                             <TableRow
                                 key={row?.id}
                                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                             >
-                                <TableCell align="center" component="th" scope="row">{row?.id}</TableCell>
-                                <TableCell style={{ width: "44%", borderLeft: "1px solid rgba(224, 224, 224, 1)", borderRight: "1px solid rgba(224, 224, 224, 1)"  }} align="left">{row?.title}</TableCell>
-                                <TableCell style={{ width: "44%" }} align="left">{row?.body}</TableCell>
+                                <TableCell  align="center" component="th" scope="row">{row?.id}</TableCell>
+                                <TableCell style={{
+                                    width: '44%',
+                                    borderLeft: '1px solid rgba(224, 224, 224, 1)',
+                                    borderRight: '1px solid rgba(224, 224, 224, 1)',
+                                }} align="left">{generateHighlightedText(row.title, searchText)}</TableCell>
+                                <TableCell  style={{
+                                    width: '44%',
+                                }} align="left">{generateHighlightedText(row.body, searchText)}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
