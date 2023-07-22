@@ -97,7 +97,7 @@ const Home:FC = () => {
 
 
     const handlePageChange = (page: number) => {
-        if ((page > 0) && (page <= (pageCount / pageSize))) {
+        if ((page > 0) && (page <= ( 100 / pageSize))) {
             setCurrentPage(page)
         }
     };
@@ -138,9 +138,9 @@ const Home:FC = () => {
 
     useEffect(() => {
         setPageCount(data?.length)
-    }, [data])
+    }, [data?.length])
 
-  return (
+    return (
         <>
             <SearchInput value={searchText} onChange={handleSearchChange}/>
             <TableContainer component={Paper}>
@@ -189,7 +189,7 @@ const Home:FC = () => {
                     className={"table__pagination_prev"}
                 >Назад</div>
                 <div className={"table__pagination_pages"}>
-                    {Array.from({ length: Math.ceil(pageCount / pageSize) }, (_, i: number) => (
+                    {Array.from({ length: Math.ceil(100 / pageSize) }, (_, i: number) => (
                         <div className={ 'table__pagination_page ' + ((currentPage === i + 1) ? "table__pagination_active" : "")} key={i} onClick={() => handlePageChange(i + 1)}>
                             {i + 1}
                         </div>
