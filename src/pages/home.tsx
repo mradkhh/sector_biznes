@@ -33,8 +33,6 @@ interface ITableHead {
 
 const Home:FC = () => {
 
-    // TODO: 3. Jadval sahifasi brauzerning URL manzilida ko'rsatilishi kerak.
-
     const [searchText, setSearchText] = useState<string>('');
     const [posts, setPosts] = useState<IPost[]>([] as IPost[]);
     const [rows, setRows] = useState<IPost[]>([] as IPost[]);
@@ -119,6 +117,27 @@ const Home:FC = () => {
         }
     };
 
+    // Function to update the URL with the new currentPage value
+    const updateURL = (page: number) => {
+        const searchParams = new URLSearchParams(window.location.search);
+        searchParams.set('page', page.toString());
+        const newURL = `${window.location.pathname}?${searchParams.toString()}`;
+        window.history.pushState({}, '', newURL);
+    };
+
+    useEffect(() => {
+        const handlePopstate = () => {
+            const searchParams = new URLSearchParams(window.location.search);
+            const newPage = Number(searchParams.get('page')) || 1;
+            setCurrentPage(newPage);
+        };
+        window.addEventListener('popstate', handlePopstate);
+
+        return () => {
+            window.removeEventListener('popstate', handlePopstate);
+        };
+    }, []);
+
     useEffect(() => {
         handleSorting(true, 'id', 0)
         setRows(data ? data : [])
@@ -129,6 +148,7 @@ const Home:FC = () => {
         const startIdx = (currentPage - 1) * pageSize;
         const endIdx = startIdx + pageSize;
         setPosts( rows?.slice(startIdx, endIdx));
+        updateURL(currentPage);
     }, [currentPage]);
 
     useEffect(() => {
