@@ -1,7 +1,8 @@
-import {ChangeEvent, FC, memo, useEffect, useState} from 'react';
+import {ChangeEvent, FC, memo, useCallback, useEffect, useState} from 'react';
 import SearchInput from "../components/inputs/SearchInput.tsx";
 import {useFetchGetPostsQuery} from "../services/fetchServices.ts";
 import {
+    Grid,
     Paper,
     Table,
     TableBody,
@@ -66,9 +67,9 @@ const Home:FC = () => {
     ]
 
 
-    const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const handleSearchChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         setSearchText(event?.target?.value);
-    };
+    }, [searchText])
 
     const handleSorting = (direction: boolean, property: string, id: number) => {
         const sortedPosts = [...rows]?.sort((a:any, b:any) => {
@@ -94,11 +95,11 @@ const Home:FC = () => {
     };
 
 
-    const handlePageChange = (page: number) => {
+    const handlePageChange = useCallback((page: number) => {
         if ((page > 0) && (page <= ( 100 / pageSize))) {
             setCurrentPage(page)
         }
-    };
+    }, [currentPage])
 
     const generateHighlightedText = (text: string, highlight: string) => {
         if (highlight?.length) {
@@ -118,13 +119,12 @@ const Home:FC = () => {
         }
     };
 
-    // Function to update the URL with the new currentPage value
-    const updateURL = (page: number) => {
+    const updateURL = useCallback((page: number) => {
         const searchParams = new URLSearchParams(window.location.search);
         searchParams.set('page', page.toString());
         const newURL = `${window.location.pathname}?${searchParams.toString()}`;
         window.history.pushState({}, '', newURL);
-    };
+    }, [])
 
     useEffect(() => {
         const handlePopstate = () => {
@@ -143,7 +143,7 @@ const Home:FC = () => {
         handleSorting(true, 'id', 0)
         setRows(data ? data : [])
         setCurrentPage(1);
-    }, [data, rows])
+    }, [rows])
 
     useEffect(() => {
         const startIdx = (currentPage - 1) * pageSize;
@@ -156,56 +156,65 @@ const Home:FC = () => {
         window.scrollTo(0, 0)
     }, [posts])
 
+    useEffect(() => {
+        handleSorting(true, 'id', 0)
+        setHeadId(1)
+    }, [])
+
     return (
         <>
             <SearchInput value={searchText} onChange={handleSearchChange}/>
-            <TableContainer component={Paper}>
-                <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                    <TableHead>
-                        <TableRow>
-                            {
-                                headCells.map((item: ITableHead) =>
-                                    <TableCell align="center" >
-                                        <TableSortLabel
-                                            key={item.id}
-                                            className={headId !== item.id ? " active_sort" : " inactive_sort"}
-                                            IconComponent={DropIcon}
-                                            onClick={() => handleSorting(item.direction, item.property, item.id)}
-                                        >
-                                            { item.title }
-                                        </TableSortLabel>
-                                    </TableCell>
-                                )
-                            }
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
+            <Grid container justifyContent="start">
+                <Grid item xs={12} md={12} lg={16}>
+                    <TableContainer component={Paper}>
+                        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                            <TableHead>
+                                <TableRow>
+                                    {
+                                        headCells.map((item: ITableHead) =>
+                                            <TableCell align="center" >
+                                                <TableSortLabel
+                                                    key={item.id}
+                                                    className={headId !== item.id ? " active_sort" : " inactive_sort"}
+                                                    IconComponent={DropIcon}
+                                                    onClick={() => handleSorting(item.direction, item.property, item.id)}
+                                                >
+                                                    { item.title }
+                                                </TableSortLabel>
+                                            </TableCell>
+                                        )
+                                    }
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {
+                                    (posts && !isFetching) && posts?.map((row: IPost) => (
+                                    <TableRow
+                                        key={row?.id}
+                                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                    >
+                                        <TableCell  align="center" component="th" scope="row">{row?.id}</TableCell>
+                                        <TableCell style={{
+                                            width: '44%',
+                                            borderLeft: '1px solid rgba(224, 224, 224, 1)',
+                                            borderRight: '1px solid rgba(224, 224, 224, 1)',
+                                        }} align="left">{generateHighlightedText(row.title, searchText)}</TableCell>
+                                        <TableCell  style={{
+                                            width: '44%',
+                                        }} align="left">{generateHighlightedText(row.body, searchText)}</TableCell>
+                                    </TableRow>
+                                ))
+                                }
+                            </TableBody>
+                        </Table>
                         {
-                            (posts && !isFetching) && posts?.map((row: IPost) => (
-                            <TableRow
-                                key={row?.id}
-                                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                            >
-                                <TableCell  align="center" component="th" scope="row">{row?.id}</TableCell>
-                                <TableCell style={{
-                                    width: '44%',
-                                    borderLeft: '1px solid rgba(224, 224, 224, 1)',
-                                    borderRight: '1px solid rgba(224, 224, 224, 1)',
-                                }} align="left">{generateHighlightedText(row.title, searchText)}</TableCell>
-                                <TableCell  style={{
-                                    width: '44%',
-                                }} align="left">{generateHighlightedText(row.body, searchText)}</TableCell>
-                            </TableRow>
-                        ))
+                            isFetching && <div className={"loading"}>
+                                                <Spinner/>
+                                            </div>
                         }
-                    </TableBody>
-                </Table>
-                {
-                    isFetching && <div className={"loading"}>
-                                        <Spinner/>
-                                    </div>
-                }
-            </TableContainer>
+                    </TableContainer>
+                </Grid>
+            </Grid>
             <div className={"table__pagination"}>
                 <div
                     onClick={() => handlePageChange(currentPage - 1)}
